@@ -25,6 +25,8 @@ class RepositoryContractTest(unittest.TestCase):
             ["coverage==7.15.2", "ruff==0.15.22"], project["dependency-groups"]["dev"]
         )
         self.assertEqual("0.0.0", project["project"]["version"])
+        bootstrap_lock = (ROOT / "vendor" / "bootstrap-tools.lock.txt").read_text()
+        self.assertIn("pip==25.2", bootstrap_lock)
 
     def test_release_version_and_container_are_immutable(self):
         self.assertRegex((ROOT / "VERSION").read_text().strip(), r"^v\d+\.\d+\.\d+$")
@@ -51,6 +53,10 @@ class RepositoryContractTest(unittest.TestCase):
             self.assertNotIn("runs-on: ubuntu-latest", text)
             self.assertIn("runs-on: ubuntu-24.04", text)
             self.assertIn('PIP_DISABLE_PIP_VERSION_CHECK: "1"', text)
+            self.assertIn(
+                "PIP_FIND_LINKS: ${{ github.workspace }}/vendor/cache/python/linux-x86_64",
+                text,
+            )
             self.assertIn('PIP_NO_INDEX: "1"', text)
             self.assertEqual(
                 text.count("actions/checkout@"),

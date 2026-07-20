@@ -10,6 +10,7 @@ permissions:
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_FIND_LINKS: ${{ github.workspace }}/vendor/cache/python/linux-x86_64
   PIP_NO_INDEX: "1"
 
 jobs:
