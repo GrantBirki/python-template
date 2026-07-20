@@ -1,5 +1,11 @@
 # python-template
 
+[![test](https://github.com/GrantBirki/python-template/actions/workflows/test.yml/badge.svg)](https://github.com/GrantBirki/python-template/actions/workflows/test.yml)
+[![lint](https://github.com/GrantBirki/python-template/actions/workflows/lint.yml/badge.svg)](https://github.com/GrantBirki/python-template/actions/workflows/lint.yml)
+[![build](https://github.com/GrantBirki/python-template/actions/workflows/build.yml/badge.svg)](https://github.com/GrantBirki/python-template/actions/workflows/build.yml)
+[![acceptance](https://github.com/GrantBirki/python-template/actions/workflows/acceptance.yml/badge.svg)](https://github.com/GrantBirki/python-template/actions/workflows/acceptance.yml)
+[![release](https://github.com/GrantBirki/python-template/actions/workflows/release.yml/badge.svg)](https://github.com/GrantBirki/python-template/actions/workflows/release.yml)
+
 A small, production-shaped template for Python applications and services. It provides a JSON web service while keeping the dependency graph, build path, and maintenance surface deliberately small.
 
 ## Requirements
