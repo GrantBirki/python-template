@@ -4,12 +4,23 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/env"
-"$HERE/bootstrap"
+bootstrap_output=""
+if ! bootstrap_output="$("$HERE/bootstrap" 2>&1)"; then
+  printf '%s\n' "$bootstrap_output" >&2
+  exit 1
+fi
 cd "$DIR"
 
 export PYTHONPATH="$DIR/src"
+echo -e "\n🧪 ${BLUE}Running tests: $(date "+%H:%M:%S")${OFF}\n"
+
 "$VENV_DIR/bin/coverage" erase
-"$VENV_DIR/bin/coverage" run --branch -m unittest discover -s tests -v
-"$VENV_DIR/bin/coverage" report --fail-under=100
-"$VENV_DIR/bin/coverage" json -o "$DIR/coverage.json"
-"$HERE/check-coverage" "$DIR/coverage.json"
+"$VENV_DIR/bin/coverage" run --branch -m unittest discover -s tests -b
+
+coverage_output=""
+if ! coverage_output="$("$VENV_DIR/bin/coverage" report --fail-under=100 2>&1)"; then
+  printf '%s\n' "$coverage_output" >&2
+  exit 1
+fi
+"$VENV_DIR/bin/coverage" json --quiet -o "$DIR/coverage.json"
+"$HERE/check-coverage" "$DIR/coverage.json" >/dev/null
