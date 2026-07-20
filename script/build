@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HERE/env"
+"$HERE/bootstrap"
+cd "$DIR"
+
+release_version="$(tr -d '[:space:]' < "$DIR/VERSION")"
+if [[ ! "$release_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "VERSION must contain a stable vMAJOR.MINOR.PATCH value" >&2
+  exit 1
+fi
+package_version="${release_version#v}"
+
+build_root="$(mktemp -d "$TMP_DIR/build.XXXXXX")"
+cleanup() {
+  rm -rf "$build_root"
+}
+trap cleanup EXIT
+
+mkdir -p "$build_root/src"
+cp "$DIR/pyproject.toml" "$DIR/README.md" "$DIR/LICENSE" "$build_root/"
+cp -R "$DIR/src/python_template" "$build_root/src/"
+
+"$BOOTSTRAP_PYTHON_BIN" - "$build_root/pyproject.toml" "$package_version" <<'PYTHON'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+version = sys.argv[2]
+text = path.read_text()
+old = 'version = "0.0.0"'
+if text.count(old) != 1:
+    raise SystemExit("expected one source package version placeholder")
+path.write_text(text.replace(old, f'version = "{version}"'))
+PYTHON
+
+rm -rf "$DIST_DIR"
+mkdir -p "$DIST_DIR"
+export SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+run_uv build --offline --no-sources --out-dir "$DIST_DIR" "$build_root"
+
+(
+  cd "$DIST_DIR"
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum python_template-* | sort > SHA256SUMS
+  else
+    shasum -a 256 python_template-* | sort > SHA256SUMS
+  fi
+)
+
+echo -e "${GREEN}Built python-template ${PURPLE}${package_version}${OFF}"

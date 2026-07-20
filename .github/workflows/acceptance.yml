@@ -1,0 +1,44 @@
+name: acceptance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_FIND_LINKS: ${{ github.workspace }}/vendor/cache/python/linux-x86_64
+  PIP_NO_INDEX: "1"
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+        with:
+          mode: block
+          container_policy: unsafe_preserve
+          allowlist: |
+            registry-1.docker.io
+            auth.docker.io
+            production.cloudfront.docker.com
+            cidr 172.17.0.0/16 tcp 8000
+
+      - name: checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # pin@v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: setup python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # pin@v6.3.0
+        with:
+          python-version-file: .python-version
+          check-latest: false
+
+      - name: acceptance
+        run: script/acceptance

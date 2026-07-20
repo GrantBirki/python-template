@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HERE/env"
+cd "$DIR"
+
+"$HERE/build"
+image_version="$(tr -d '[:space:]' < VERSION)"
+image_tag="$REPO_NAME:${image_version#v}"
+docker build --platform linux/amd64 --network=none --tag "$image_tag" .
+printf '%s\n' "$image_tag"

@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export OFF='\033[0m'
+export RED='\033[0;31m'
+export GREEN='\033[0;32m'
+export BLUE='\033[0;34m'
+export PURPLE='\033[0;35m'
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd)"
+export DIR
+export REPO_NAME="$(basename "$DIR")"
+
+PROJECT_PYTHON_VERSION="$(tr -d '[:space:]' < "$DIR/.python-version")"
+UV_BOOTSTRAP_VERSION="$(tr -d '[:space:]' < "$DIR/.uv-version")"
+PIP_BOOTSTRAP_VERSION="25.2"
+export PROJECT_PYTHON_VERSION UV_BOOTSTRAP_VERSION PIP_BOOTSTRAP_VERSION
+
+if command -v pyenv >/dev/null 2>&1; then
+  export PYENV_ROOT="${PYENV_ROOT:-$(pyenv root)}"
+  export PATH="$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH"
+  export PYENV_VERSION="${PYENV_VERSION:-$PROJECT_PYTHON_VERSION}"
+  BOOTSTRAP_PYTHON_BIN="${BOOTSTRAP_PYTHON_BIN:-$(pyenv which python 2>/dev/null || true)}"
+else
+  BOOTSTRAP_PYTHON_BIN="${BOOTSTRAP_PYTHON_BIN:-$(command -v python3 || true)}"
+fi
+
+if [ -z "$BOOTSTRAP_PYTHON_BIN" ]; then
+  echo "python $PROJECT_PYTHON_VERSION is required but was not found" >&2
+  return 1 2>/dev/null || exit 1
+fi
+export BOOTSTRAP_PYTHON_BIN
+
+case "$(uname -s):$(uname -m)" in
+  Darwin:arm64)
+    VENDOR_PLATFORM="macos-arm64"
+    ;;
+  Linux:x86_64)
+    VENDOR_PLATFORM="linux-x86_64"
+    ;;
+  *)
+    echo "unsupported platform: $(uname -s):$(uname -m); supported platforms are macOS arm64 and Linux x86_64" >&2
+    return 1 2>/dev/null || exit 1
+    ;;
+esac
+export VENDOR_PLATFORM
+
+export VENV_DIR="$DIR/.venv"
+export BOOTSTRAP_TOOLS_DIR="$DIR/.bootstrap-tools"
+export VENDOR_DIR="$DIR/vendor"
+export VENDOR_CACHE_DIR="$VENDOR_DIR/cache/python/$VENDOR_PLATFORM"
+export VENDOR_REQUIREMENTS="$VENDOR_DIR/requirements.lock.txt"
+export VENDOR_RUNTIME_REQUIREMENTS="$VENDOR_DIR/runtime-requirements.lock.txt"
+export VENDOR_BOOTSTRAP_REQUIREMENTS="$VENDOR_DIR/bootstrap-tools.lock.txt"
+export DIST_DIR="$DIR/dist"
+export TMP_DIR="$DIR/tmp"
+export UV_CACHE_DIR="$TMP_DIR/uv-cache"
+export UV_PROJECT_ENVIRONMENT="$VENV_DIR"
+export UV_LINK_MODE="copy"
+export UV_PYTHON_DOWNLOADS="never"
+export UV_OFFLINE="1"
+export PIP_NO_INDEX="1"
+export PIP_DISABLE_PIP_VERSION_CHECK="1"
+export PATH="$VENV_DIR/bin:$PATH"
+
+mkdir -p "$BOOTSTRAP_TOOLS_DIR" "$DIST_DIR" "$TMP_DIR" "$UV_CACHE_DIR"
+
+run_uv() {
+  PYTHONPATH="$BOOTSTRAP_TOOLS_DIR${PYTHONPATH:+:$PYTHONPATH}" "$BOOTSTRAP_PYTHON_BIN" -m uv "$@"
+}

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HERE/env"
+"$HERE/bootstrap"
+cd "$DIR"
+
+export PYTHONPATH="$DIR/src"
+exec "$VENV_DIR/bin/python" -c 'from python_template.server import main; raise SystemExit(main())' "$@"

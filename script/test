@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HERE/env"
+"$HERE/bootstrap"
+cd "$DIR"
+
+export PYTHONPATH="$DIR/src"
+"$VENV_DIR/bin/coverage" erase
+"$VENV_DIR/bin/coverage" run --branch -m unittest discover -s tests -v
+"$VENV_DIR/bin/coverage" report --fail-under=100
+"$VENV_DIR/bin/coverage" json -o "$DIR/coverage.json"
+"$HERE/check-coverage" "$DIR/coverage.json"

@@ -1,0 +1,8 @@
+.bootstrap-tools/
+.coverage
+.venv/
+coverage.json
+dist/
+tmp/
+__pycache__/
+*.py[cod]

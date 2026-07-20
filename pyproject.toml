@@ -1,0 +1,37 @@
+[build-system]
+requires = ["uv_build==0.11.29"]
+build-backend = "uv_build"
+
+[project]
+name = "python-template"
+version = "0.0.0"
+description = "A template for small production-shaped Python services"
+readme = "README.md"
+requires-python = "==3.14.0"
+license = "MIT"
+authors = [{ name = "Grant Birkinbine" }]
+dependencies = ["waitress==3.0.2"]
+
+[project.scripts]
+python-template = "python_template.server:main"
+
+[dependency-groups]
+dev = [
+    "coverage==7.15.2",
+    "ruff==0.15.22",
+]
+
+[tool.uv]
+package = true
+exclude-newer = false
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.coverage.run]
+branch = true
+source = ["python_template"]
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
