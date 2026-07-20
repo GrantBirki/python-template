@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_INDEX: "1"
+
 jobs:
   test:
     runs-on: ubuntu-24.04

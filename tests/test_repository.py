@@ -50,6 +50,8 @@ class RepositoryContractTest(unittest.TestCase):
             )
             self.assertNotIn("runs-on: ubuntu-latest", text)
             self.assertIn("runs-on: ubuntu-24.04", text)
+            self.assertIn('PIP_DISABLE_PIP_VERSION_CHECK: "1"', text)
+            self.assertIn('PIP_NO_INDEX: "1"', text)
             self.assertEqual(
                 text.count("actions/checkout@"),
                 text.count("persist-credentials: false"),
