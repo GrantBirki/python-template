@@ -1,0 +1,9 @@
+.git
+.github
+.bootstrap-tools
+.coverage
+.venv
+coverage.json
+tests
+tmp
+vendor/cache/python/macos-arm64

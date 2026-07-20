@@ -1,0 +1,193 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+    paths: [VERSION]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+        with:
+          mode: audit
+
+      - name: checkout exact commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # pin@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: validate version
+        id: version
+        run: |
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "VERSION must contain a stable vMAJOR.MINOR.PATCH value" >&2
+            exit 1
+          fi
+          if git rev-parse --quiet --verify "refs/tags/$version" >/dev/null; then
+            echo "tag already exists: $version" >&2
+            exit 1
+          fi
+          previous="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)"
+          python - "$previous" "$version" <<'PYTHON'
+          import sys
+
+          def parse(value):
+              return tuple(int(part) for part in value.removeprefix("v").split("."))
+
+          previous, current = sys.argv[1:]
+          if previous and parse(current) <= parse(previous):
+              raise SystemExit(f"VERSION {current} must be newer than {previous}")
+          PYTHON
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+        with:
+          mode: audit
+
+      - name: checkout exact commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # pin@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: setup python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # pin@v6.3.0
+        with:
+          python-version-file: .python-version
+          check-latest: false
+
+      - name: test
+        run: script/test
+
+      - name: lint
+        run: script/lint
+
+      - name: build
+        run: script/build
+
+      - name: acceptance
+        run: script/acceptance
+
+      - name: upload release artifacts
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # pin@v7.0.1
+        with:
+          name: release-${{ needs.validate.outputs.version }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  attest:
+    needs: [validate, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    steps:
+      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+        with:
+          mode: audit
+
+      - name: download release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: dist
+
+      - name: attest build provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # pin@v4.1.1
+        with:
+          subject-path: dist/*
+
+  publish:
+    needs: [validate, build, attest]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+        with:
+          mode: audit
+
+      - name: checkout exact commit
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # pin@v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: download release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # pin@v8.0.1
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: dist
+
+      - name: verify checksums
+        run: cd dist && sha256sum --check SHA256SUMS
+
+      - name: create annotated tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          tag_object="$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/tags" -f tag="$VERSION" -f message="Release $VERSION" -f object="$GITHUB_SHA" -f type=commit --jq .sha)"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$VERSION" -f sha="$tag_object" >/dev/null
+          gh release create "$VERSION" dist/* --verify-tag --title "$VERSION" --generate-notes
+
+  verify:
+    needs: [validate, publish]
+    runs-on: ubuntu-24.04
+    permissions:
+      attestations: read
+      contents: read
+    steps:
+      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+        with:
+          mode: audit
+
+      - name: download published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: gh release download "$VERSION" --repo "$GITHUB_REPOSITORY" --dir release
+
+      - name: verify release checksums and provenance
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd release
+          sha256sum --check SHA256SUMS
+          for artifact in python_template-* SHA256SUMS; do
+            gh attestation verify "$artifact" \
+              --repo "$GITHUB_REPOSITORY" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+              --source-ref refs/heads/main \
+              --source-digest "$GITHUB_SHA" \
+              --deny-self-hosted-runners
+          done

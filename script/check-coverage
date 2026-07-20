@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+
+import json
+import sys
+from pathlib import Path
+
+
+def main() -> int:
+    report = json.loads(Path(sys.argv[1]).read_text())
+    failures = []
+    for filename, details in sorted(report["files"].items()):
+        functions = details.get("functions")
+        if functions is None:
+            failures.append(f"{filename}: coverage JSON did not include function data")
+            continue
+        for name, function in sorted(functions.items()):
+            summary = function["summary"]
+            if summary["missing_lines"] or summary["missing_branches"]:
+                failures.append(f"{filename}:{name}: function coverage is incomplete")
+    if failures:
+        print("First-party function coverage must be 100%:", file=sys.stderr)
+        print("\n".join(failures), file=sys.stderr)
+        return 1
+    print("First-party line, branch, and function coverage is 100%.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

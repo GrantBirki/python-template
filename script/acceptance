@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HERE/env"
+cd "$DIR"
+
+if ! docker info >/dev/null 2>&1; then
+  echo "Docker is required for acceptance tests" >&2
+  exit 1
+fi
+
+image_tag="$($HERE/docker-build | tail -n 1)"
+container_name="python-template-acceptance-$$"
+cleanup() {
+  docker rm -f "$container_name" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+docker run --detach --platform linux/amd64 --name "$container_name" --read-only --tmpfs /tmp --publish 127.0.0.1::8000 "$image_tag" >/dev/null
+port="$(docker port "$container_name" 8000/tcp | sed 's/.*://')"
+base_url="http://127.0.0.1:$port"
+
+"$BOOTSTRAP_PYTHON_BIN" - "$base_url" <<'PYTHON'
+import json
+import sys
+import time
+import urllib.error
+import urllib.request
+
+base_url = sys.argv[1]
+
+for _ in range(60):
+    try:
+        with urllib.request.urlopen(f"{base_url}/health", timeout=1) as response:
+            if response.status == 200:
+                break
+    except (OSError, urllib.error.URLError):
+        time.sleep(0.25)
+else:
+    raise SystemExit("service did not become ready")
+
+
+def request(path, *, method="GET", request_id=None):
+    headers = {"X-Request-ID": request_id} if request_id else {}
+    req = urllib.request.Request(f"{base_url}{path}", method=method, headers=headers)
+    try:
+        response = urllib.request.urlopen(req, timeout=2)
+    except urllib.error.HTTPError as error:
+        response = error
+    with response:
+        headers = {name.lower(): value for name, value in response.headers.items()}
+        return response.status, headers, json.loads(response.read())
+
+
+status, headers, body = request("/health")
+assert status == 200 and body == {"status": "ok"}
+assert headers["x-request-id"]
+
+status, _, body = request("/hello")
+assert status == 200 and body == {"message": "Hello, World!"}
+
+status, headers, body = request("/hello?name=Grant", request_id="acceptance-request")
+assert status == 200 and body == {"message": "Hello, Grant!"}
+assert headers["x-request-id"] == "acceptance-request"
+
+status, _, body = request("/missing")
+assert status == 404 and body == {"error": "not found"}
+
+status, headers, body = request("/health", method="POST")
+assert status == 405 and body == {"error": "method not allowed"}
+assert headers["allow"] == "GET"
+PYTHON
+
+logs="$(docker logs "$container_name" 2>&1)"
+if [[ "$logs" != *"request_id=acceptance-request"* ]]; then
+  echo "acceptance request ID was not present in service logs" >&2
+  exit 1
+fi
+if [[ "$logs" == *"name=Grant"* ]]; then
+  echo "service logs included query data" >&2
+  exit 1
+fi
+
+echo "Acceptance tests passed."

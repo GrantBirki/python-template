@@ -1,0 +1,5 @@
+# Project scripts are first-party workflow glue, but should not dominate GitHub language statistics.
+script/** -linguist-detectable
+
+# Committed dependency artifacts are vendored inputs.
+vendor/** linguist-vendored

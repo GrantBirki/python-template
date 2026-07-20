@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$HERE/env"
+"$HERE/bootstrap"
+cd "$DIR"
+
+"$VENV_DIR/bin/ruff" check src tests
+"$VENV_DIR/bin/ruff" format --check src tests
