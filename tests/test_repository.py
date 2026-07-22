@@ -79,7 +79,7 @@ class RepositoryContractTest(unittest.TestCase):
                         if candidate.strip()
                     )
                     self.assertTrue(
-                        next_line.startswith("- uses: GrantBirki/fence@"),
+                        next_line.startswith("- uses: openai/fence@"),
                         f"{workflow_name}: {next_line}",
                     )
 
