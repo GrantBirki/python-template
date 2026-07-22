@@ -24,7 +24,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+      - uses: openai/fence@bbe8d131a54284a78390dbc2ce06893019830913 # pin@v0.8.4
         with:
           mode: block
 
@@ -68,7 +68,7 @@ jobs:
     outputs:
       artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
-      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+      - uses: openai/fence@bbe8d131a54284a78390dbc2ce06893019830913 # pin@v0.8.4
         with:
           mode: block
           container_policy: unsafe_preserve
@@ -121,7 +121,7 @@ jobs:
       attestations: write
       artifact-metadata: write
     steps:
-      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+      - uses: openai/fence@bbe8d131a54284a78390dbc2ce06893019830913 # pin@v0.8.4
         with:
           mode: block
 
@@ -142,7 +142,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+      - uses: openai/fence@bbe8d131a54284a78390dbc2ce06893019830913 # pin@v0.8.4
         with:
           mode: block
 
@@ -178,7 +178,7 @@ jobs:
       attestations: read
       contents: read
     steps:
-      - uses: GrantBirki/fence@cb512e65fe0647f077ff68481c995e20b8f87040 # pin@v0.8.3
+      - uses: openai/fence@bbe8d131a54284a78390dbc2ce06893019830913 # pin@v0.8.4
         with:
           mode: block
 
