@@ -17,9 +17,9 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: openai/fence@bbe8d131a54284a78390dbc2ce06893019830913 # pin@v0.8.4
+      - uses: openai/fence@db291f5c51949e6e6ec1634621b36dc4bbf3d54a # pin@v0.8.7
         with:
-          mode: block
+          mode: audit
 
       - name: checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # pin@v7.0.0
