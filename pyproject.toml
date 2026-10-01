@@ -23,7 +23,7 @@ dev = [
 
 [tool.uv]
 package = true
-exclude-newer = false
+exclude-newer = "7 days"
 
 [tool.ruff]
 target-version = "py314"
