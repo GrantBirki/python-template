@@ -21,7 +21,7 @@ The main project surfaces are `src/` for application code, `tests/` for unit and
 
 - `.python-version` is the exact supported Python version and must agree with `pyproject.toml`.
 - `.uv-version` is the exact bootstrap and lock-management version.
-- Keep direct dependencies exact-version pinned, `uv.lock` current, exported requirements hash-locked, and matching wheels committed for every supported platform.
+- Keep the 7-day release-age cutoff in `pyproject.toml` and direct dependencies exact-version pinned, `uv.lock` current, exported requirements hash-locked, and matching wheels committed for every supported platform.
 - Use `script/vendor` only for intentional networked dependency refreshes. Commit the manifest, lock, exports, and wheel changes together.
 - Pin Git dependencies to full 40-character commit SHAs and container images to immutable manifest digests.
 

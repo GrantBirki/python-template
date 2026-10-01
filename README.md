@@ -49,7 +49,7 @@ Developers and CI use these same entrypoints.
 
 ## Dependencies
 
-Waitress is the only runtime dependency. The test and lint toolchain adds coverage.py and Ruff. All direct dependencies use exact versions, `uv.lock` records the complete resolution, exported requirements include hashes, and binary wheels are committed for macOS arm64 and Linux x86_64.
+Waitress is the only runtime dependency. The test and lint toolchain adds coverage.py and Ruff. New resolutions apply the 7-day release-age cutoff in `pyproject.toml`. All direct dependencies use exact versions, `uv.lock` records the complete resolution, exported requirements include hashes, and binary wheels are committed for macOS arm64 and Linux x86_64.
 
 To update dependencies, edit the exact versions in `pyproject.toml` or `.uv-version`, then run:
 
