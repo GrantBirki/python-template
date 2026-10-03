@@ -77,3 +77,5 @@ The unit suite is deterministic and does not call live services. The acceptance 
 ## Customizing the Template
 
 Replace the sample routes and package metadata while preserving the repository scripts, exact language version, offline dependency path, tests, immutable workflow references, and release integrity checks.
+
+GitHub Actions workflows set `cache-mode: none` to prevent dependency cache restores and saves. Committed vendored dependencies and uploaded build artifacts remain separate from the Actions cache.
