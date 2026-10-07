@@ -36,7 +36,7 @@ extend-select = ["ANN"]
 root = ["src"]
 
 [tool.ty.src]
-include = ["src", "tests"]
+include = ["src", "tests", "script/check-coverage"]
 
 [tool.coverage.run]
 branch = true

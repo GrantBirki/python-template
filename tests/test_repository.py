@@ -1,6 +1,8 @@
 import hashlib
 import os
 import re
+import subprocess
+import tempfile
 import tomllib
 import unittest
 from pathlib import Path
@@ -28,6 +30,32 @@ class RepositoryContractTest(unittest.TestCase):
         self.assertEqual("0.0.0", project["project"]["version"])
         bootstrap_lock = (ROOT / "vendor" / "bootstrap-tools.lock.txt").read_text()
         self.assertIn("pip==25.2", bootstrap_lock)
+
+    def test_ty_rejects_type_errors_in_the_python_helper(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            project = Path(directory)
+            (project / "pyproject.toml").write_text(
+                (ROOT / "pyproject.toml").read_text()
+            )
+            (project / "src").mkdir()
+            (project / "src/example.py").write_text(
+                "def valid() -> int:\n    return 0\n"
+            )
+            (project / "script").mkdir()
+            (project / "script/check-coverage").write_text(
+                '#!/usr/bin/env python3\n\ndef invalid() -> int:\n    return "wrong type"\n'
+            )
+            result = subprocess.run(
+                [str(ROOT / ".venv/bin/ty"), "check", "--error-on-warning"],
+                cwd=project,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertIn("invalid-return-type", result.stdout)
+        self.assertIn("script/check-coverage", result.stdout)
 
     def test_release_version_and_container_are_immutable(self) -> None:
         self.assertRegex((ROOT / "VERSION").read_text().strip(), r"^v\d+\.\d+\.\d+$")
