@@ -16,6 +16,8 @@ env:
   PIP_FIND_LINKS: ${{ github.workspace }}/vendor/cache/python/linux-x86_64
   PIP_NO_INDEX: "1"
 
+cache-mode: none
+
 jobs:
   validate:
     runs-on: ubuntu-24.04
