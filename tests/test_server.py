@@ -8,29 +8,29 @@ from python_template import server
 
 
 class ServerTest(unittest.TestCase):
-    def test_port_accepts_valid_value(self):
+    def test_port_accepts_valid_value(self) -> None:
         self.assertEqual(8000, server._port("8000"))
 
-    def test_port_rejects_non_integer(self):
+    def test_port_rejects_non_integer(self) -> None:
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "integer"):
             server._port("eight")
 
-    def test_port_rejects_values_below_range(self):
+    def test_port_rejects_values_below_range(self) -> None:
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "between"):
             server._port("0")
 
-    def test_port_rejects_values_above_range(self):
+    def test_port_rejects_values_above_range(self) -> None:
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "between"):
             server._port("65536")
 
-    def test_log_level_normalizes_valid_value(self):
+    def test_log_level_normalizes_valid_value(self) -> None:
         self.assertEqual("WARNING", server._log_level("warning"))
 
-    def test_log_level_rejects_unknown_value(self):
+    def test_log_level_rejects_unknown_value(self) -> None:
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "DEBUG, INFO"):
             server._log_level("verbose")
 
-    def test_parser_uses_environment_defaults(self):
+    def test_parser_uses_environment_defaults(self) -> None:
         args = server.build_parser(
             {"HOST": "0.0.0.0", "PORT": "9000", "LOG_LEVEL": "debug"}
         ).parse_args([])
@@ -39,7 +39,7 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(9000, args.port)
         self.assertEqual("DEBUG", args.log_level)
 
-    def test_parser_arguments_override_environment(self):
+    def test_parser_arguments_override_environment(self) -> None:
         args = server.build_parser(
             {"HOST": "env", "PORT": "9000", "LOG_LEVEL": "ERROR"}
         ).parse_args(["--host", "cli", "--port", "7000", "--log-level", "info"])
@@ -48,7 +48,7 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(7000, args.port)
         self.assertEqual("INFO", args.log_level)
 
-    def test_parser_uses_process_environment_when_not_supplied(self):
+    def test_parser_uses_process_environment_when_not_supplied(self) -> None:
         with mock.patch.dict(
             os.environ,
             {"HOST": "process", "PORT": "8100", "LOG_LEVEL": "CRITICAL"},
@@ -60,12 +60,12 @@ class ServerTest(unittest.TestCase):
         self.assertEqual(8100, args.port)
         self.assertEqual("CRITICAL", args.log_level)
 
-    def test_parser_rejects_invalid_environment_port(self):
+    def test_parser_rejects_invalid_environment_port(self) -> None:
         with self.assertRaises(SystemExit):
             server.build_parser({"PORT": "invalid"}).parse_args([])
 
     @mock.patch("python_template.server.logging.basicConfig")
-    def test_configure_logging(self, basic_config):
+    def test_configure_logging(self, basic_config: mock.MagicMock) -> None:
         server.configure_logging("INFO")
 
         basic_config.assert_called_once_with(
@@ -76,7 +76,9 @@ class ServerTest(unittest.TestCase):
 
     @mock.patch("python_template.server.serve")
     @mock.patch("python_template.server.configure_logging")
-    def test_main_configures_and_runs_waitress(self, configure_logging, serve):
+    def test_main_configures_and_runs_waitress(
+        self, configure_logging: mock.MagicMock, serve: mock.MagicMock
+    ) -> None:
         with self.assertLogs("python_template.server", logging.INFO) as logs:
             result = server.main(
                 ["--host", "127.0.0.2", "--port", "8123", "--log-level", "error"], {}

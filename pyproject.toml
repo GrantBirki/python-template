@@ -19,6 +19,7 @@ python-template = "python_template.server:main"
 dev = [
     "coverage==7.15.2",
     "ruff==0.15.22",
+    "ty==0.0.84",
 ]
 
 [tool.uv]
@@ -27,6 +28,15 @@ exclude-newer = "7 days"
 
 [tool.ruff]
 target-version = "py314"
+
+[tool.ruff.lint]
+extend-select = ["ANN"]
+
+[tool.ty.environment]
+root = ["src"]
+
+[tool.ty.src]
+include = ["src", "tests", "script/check-coverage"]
 
 [tool.coverage.run]
 branch = true
