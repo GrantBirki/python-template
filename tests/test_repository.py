@@ -11,7 +11,7 @@ WORKFLOWS = ("test.yml", "lint.yml", "build.yml", "acceptance.yml", "release.yml
 
 
 class RepositoryContractTest(unittest.TestCase):
-    def test_python_and_uv_versions_are_exact_and_aligned(self):
+    def test_python_and_uv_versions_are_exact_and_aligned(self) -> None:
         project = tomllib.loads((ROOT / "pyproject.toml").read_text())
 
         python_version = (ROOT / ".python-version").read_text().strip()
@@ -22,13 +22,14 @@ class RepositoryContractTest(unittest.TestCase):
         )
         self.assertEqual(["waitress==3.0.2"], project["project"]["dependencies"])
         self.assertEqual(
-            ["coverage==7.15.2", "ruff==0.15.22"], project["dependency-groups"]["dev"]
+            ["coverage==7.15.2", "ruff==0.15.22", "ty==0.0.84"],
+            project["dependency-groups"]["dev"],
         )
         self.assertEqual("0.0.0", project["project"]["version"])
         bootstrap_lock = (ROOT / "vendor" / "bootstrap-tools.lock.txt").read_text()
         self.assertIn("pip==25.2", bootstrap_lock)
 
-    def test_release_version_and_container_are_immutable(self):
+    def test_release_version_and_container_are_immutable(self) -> None:
         self.assertRegex((ROOT / "VERSION").read_text().strip(), r"^v\d+\.\d+\.\d+$")
         dockerfile = (ROOT / "Dockerfile").read_text()
         self.assertIn(
@@ -41,7 +42,7 @@ class RepositoryContractTest(unittest.TestCase):
         self.assertEqual(1, len(from_lines))
         self.assertRegex(from_lines[0], r"^FROM [^@\s]+@sha256:[0-9a-f]{64}$")
 
-    def test_workflows_use_immutable_actions_and_safe_checkout(self):
+    def test_workflows_use_immutable_actions_and_safe_checkout(self) -> None:
         action_ref = re.compile(r"uses:\s+[^\s@]+@([^\s#]+)")
         for workflow_name in WORKFLOWS:
             text = (ROOT / ".github" / "workflows" / workflow_name).read_text()
@@ -64,7 +65,7 @@ class RepositoryContractTest(unittest.TestCase):
                 workflow_name,
             )
 
-    def test_fence_is_the_first_step_in_every_job(self):
+    def test_fence_is_the_first_step_in_every_job(self) -> None:
         for workflow_name in WORKFLOWS:
             lines = (
                 (ROOT / ".github" / "workflows" / workflow_name)
@@ -83,7 +84,7 @@ class RepositoryContractTest(unittest.TestCase):
                         f"{workflow_name}: {next_line}",
                     )
 
-    def test_vendored_wheels_are_binary_and_hash_locked(self):
+    def test_vendored_wheels_are_binary_and_hash_locked(self) -> None:
         lock_text = "\n".join(
             (ROOT / "vendor" / name).read_text()
             for name in (
@@ -105,7 +106,7 @@ class RepositoryContractTest(unittest.TestCase):
             platform_packages.append(packages)
         self.assertEqual(platform_packages[0], platform_packages[1])
 
-    def test_repository_scripts_are_executable_and_hidden_from_linguist(self):
+    def test_repository_scripts_are_executable_and_hidden_from_linguist(self) -> None:
         scripts = [path for path in (ROOT / "script").iterdir() if path.is_file()]
         self.assertTrue(scripts)
         self.assertTrue(all(os.access(path, os.X_OK) for path in scripts))
