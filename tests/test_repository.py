@@ -74,6 +74,14 @@ class RepositoryContractTest(unittest.TestCase):
         action_ref = re.compile(r"uses:\s+[^\s@]+@([^\s#]+)")
         for workflow_name in WORKFLOWS:
             text = (ROOT / ".github" / "workflows" / workflow_name).read_text()
+            self.assertRegex(text, r"(?m)^cache-mode: none$", workflow_name)
+            self.assertTrue(
+                all(
+                    mode == "none"
+                    for mode in re.findall(r"(?m)^\s*cache-mode:\s*(\S+)", text)
+                ),
+                workflow_name,
+            )
             refs = action_ref.findall(text)
             self.assertTrue(refs, workflow_name)
             self.assertTrue(
