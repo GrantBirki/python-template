@@ -39,7 +39,7 @@ Every response includes an `X-Request-ID`. A valid caller-provided ID is preserv
 - `script/bootstrap` creates the local environment entirely from committed wheels.
 - `script/server` runs the Waitress service.
 - `script/test` runs the unit suite and enforces 100% line, branch, and function coverage.
-- `script/lint` checks the code with Ruff.
+- `script/lint` checks annotations and formatting with Ruff and checks types with ty.
 - `script/build` creates a wheel, source distribution, and checksums under `dist/`.
 - `script/docker-build` creates the pinned Linux amd64 application image.
 - `script/acceptance` exercises the built wheel through the running container.
@@ -49,7 +49,7 @@ Developers and CI use these same entrypoints.
 
 ## Dependencies
 
-Waitress is the only runtime dependency. The test and lint toolchain adds coverage.py and Ruff. New resolutions apply the 7-day release-age cutoff in `pyproject.toml`. All direct dependencies use exact versions, `uv.lock` records the complete resolution, exported requirements include hashes, and binary wheels are committed for macOS arm64 and Linux x86_64.
+Waitress is the only runtime dependency. The test and lint toolchain adds coverage.py, Ruff, and ty. Function annotations are required, and ty checks their consistency during linting; Python itself does not enforce them at runtime. New resolutions apply the 7-day release-age cutoff in `pyproject.toml`. All direct dependencies use exact versions, `uv.lock` records the complete resolution, exported requirements include hashes, and binary wheels are committed for macOS arm64 and Linux x86_64.
 
 To update dependencies, edit the exact versions in `pyproject.toml` or `.uv-version`, then run:
 

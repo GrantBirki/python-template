@@ -29,7 +29,7 @@ The main project surfaces are `src/` for application code, `tests/` for unit and
 
 - `script/bootstrap` installs only from the committed wheel cache.
 - `script/test` enforces 100% line, branch, and first-party function coverage.
-- `script/lint` verifies Ruff checks and formatting.
+- `script/lint` verifies Ruff checks, formatting, and type consistency with ty. Annotate every first-party Python function; keep dynamic `Any` limited to external data and test fixtures.
 - `script/build` creates release archives and checksums without changing tracked files.
 - `script/acceptance` exercises the packaged application through its containerized public interface.
 - `script/vendor` is the sole dependency update path that requires network access.
