@@ -19,6 +19,10 @@ cleanup() {
 trap cleanup EXIT
 
 docker run --detach --platform linux/amd64 --name "$container_name" --read-only --tmpfs /tmp --publish 127.0.0.1::8000 "$image_tag" >/dev/null
+for python_bin in /usr/local/bin/python /opt/venv/bin/python; do
+  docker exec "$container_name" "$python_bin" -c 'import importlib.util; assert importlib.util.find_spec("pip") is None; assert importlib.util.find_spec("ensurepip") is None'
+done
+
 port="$(docker port "$container_name" 8000/tcp | sed 's/.*://')"
 base_url="http://127.0.0.1:$port"
 
