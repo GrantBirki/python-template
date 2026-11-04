@@ -31,7 +31,7 @@ The main project surfaces are `src/` for application code, `tests/` for unit and
 - `script/test` enforces 100% line, branch, and first-party function coverage.
 - `script/lint` verifies Ruff checks, formatting, and type consistency with ty. Annotate every first-party Python function; keep dynamic `Any` limited to external data and test fixtures.
 - `script/build` creates release archives and checksums without changing tracked files.
-- `script/acceptance` exercises the packaged application through its containerized public interface.
+- `script/acceptance` exercises the packaged application through its containerized public interface. It also checks that pip and ensurepip are absent from both the system interpreter and application venv after the offline image build.
 - `script/vendor` is the sole dependency update path that requires network access.
 
 Keep unit tests fast, deterministic, and independent of live services. Cover successful behavior, failures, edge cases, and every meaningful branch. Do not weaken coverage or repository contract checks to make a change pass.

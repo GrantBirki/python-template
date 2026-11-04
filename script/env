@@ -14,7 +14,7 @@ export REPO_NAME="$(basename "$DIR")"
 
 PROJECT_PYTHON_VERSION="$(tr -d '[:space:]' < "$DIR/.python-version")"
 UV_BOOTSTRAP_VERSION="$(tr -d '[:space:]' < "$DIR/.uv-version")"
-PIP_BOOTSTRAP_VERSION="25.2"
+PIP_BOOTSTRAP_VERSION="26.3"
 export PROJECT_PYTHON_VERSION UV_BOOTSTRAP_VERSION PIP_BOOTSTRAP_VERSION
 
 if command -v pyenv >/dev/null 2>&1; then

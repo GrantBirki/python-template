@@ -68,7 +68,7 @@ $ script/build
 $ script/acceptance
 ```
 
-The unit suite is deterministic and does not call live services. The acceptance suite builds the deployment-shaped container and tests the public HTTP interface. The Docker build may need to pull the pinned base image once, but Python packages are installed from committed wheels with build networking disabled.
+The unit suite is deterministic and does not call live services. The acceptance suite builds the deployment-shaped container and tests the public HTTP interface. The Docker build may need to pull the pinned base image once, but Python packages are installed from committed wheels with build networking disabled. The finished runtime image has neither pip nor ensurepip; package installation stays in the image build.
 
 ## Releases
 

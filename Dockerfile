@@ -12,10 +12,11 @@ COPY vendor/runtime-requirements.lock.txt vendor/runtime-requirements.lock.txt
 COPY vendor/cache/python/linux-x86_64 vendor/cache/python/linux-x86_64
 COPY dist/*.whl dist/
 
-RUN python -m venv /opt/venv && \
-    /opt/venv/bin/pip install --disable-pip-version-check --require-hashes --no-index --find-links vendor/cache/python/linux-x86_64 -r vendor/runtime-requirements.lock.txt && \
-    /opt/venv/bin/pip install --disable-pip-version-check --no-deps --no-index dist/*.whl && \
-    rm -rf /root/.cache
+RUN python -m venv --without-pip /opt/venv && \
+    /usr/local/bin/python -m pip --python /opt/venv install --disable-pip-version-check --require-hashes --no-index --find-links vendor/cache/python/linux-x86_64 -r vendor/runtime-requirements.lock.txt && \
+    /usr/local/bin/python -m pip --python /opt/venv install --disable-pip-version-check --no-deps --no-index dist/*.whl && \
+    /usr/local/bin/python -m pip uninstall --yes pip && \
+    rm -rf /usr/local/lib/python3.14/ensurepip /root/.cache vendor dist
 
 USER app
 EXPOSE 8000
