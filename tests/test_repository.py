@@ -28,6 +28,8 @@ class RepositoryContractTest(unittest.TestCase):
             project["dependency-groups"]["dev"],
         )
         self.assertEqual("0.0.0", project["project"]["version"])
+        bootstrap_lock = (ROOT / "vendor" / "bootstrap-tools.lock.txt").read_text()
+        self.assertIn("pip==26.3", bootstrap_lock)
 
     def test_ty_rejects_type_errors_in_the_python_helper(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
